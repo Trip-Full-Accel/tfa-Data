@@ -2,7 +2,7 @@ import os
 import shutil
 import urllib
 import cv2
-import flask
+from flask import Flask
 import pymysql
 import numpy as np
 from flask import jsonify
@@ -11,9 +11,14 @@ import tensorflow as tf
 from keras.preprocessing import image
 import keras.utils as image
 from keras.models import load_model
+from flask_cors import CORS
 
-app = flask.Flask(__name__)
+app = Flask(__name__)
+CORS(app)
 
+@app.route("/")
+def home():
+    return 'hi'
 
 def get_image():
     conn = pymysql.connect(host='localhost',
@@ -22,7 +27,7 @@ def get_image():
                            db='tfa',
                            charset='utf8')
     curs = conn.cursor()
-    sql = "SELECT id, url FROM post ORDER BY created_at DESC LIMIT 20"
+    sql = "SELECT id, url FROM post ORDER BY created_at DESC LIMIT 10"
     curs.execute(sql)
 
     images = curs.fetchall()
@@ -52,6 +57,7 @@ def url_to_image(url):
 
 @app.route("/recommend/image", methods=["POST"])
 def recommend_image():
+    print("ㅅㅅㅅㅅㅅ")
     if os.path.exists("./temp/image/"):
         shutil.rmtree("./temp/image/")
     os.mkdir("./temp/image/")
@@ -81,7 +87,7 @@ def recommend_image():
     for ox, filenames in dic_ox_filenames.items():
 
         fig = plt.figure(figsize=(16, 10))
-        rows, cols = 1, 20
+        rows, cols = 1, 10
         for i, fn in enumerate(filenames):
             path = test_dir + '/' + fn
             test_img = image.load_img(path, target_size=(150, 150), interpolation='bilinear')
@@ -106,6 +112,11 @@ def recommend_image():
                 plt.imshow(test_img, cmap='gray')
 
                 night_images.append(images_list[i])
-        plt.show()
+        #plt.show()
 
     return jsonify(day_images, night_images)
+
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0')
+
